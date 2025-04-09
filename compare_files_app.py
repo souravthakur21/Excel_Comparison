@@ -34,7 +34,6 @@ if file1 and file2:
     # Proceed if files were successfully loaded
     if df1 is not None and df2 is not None:
         common_columns = set(df1.columns) & set(df2.columns)
-        missing_columns = set(df1.columns) ^ set(df2.columns)
         
         results = []
         for col in common_columns:
@@ -57,12 +56,26 @@ if file1 and file2:
                     
                 results.append((col, count1, count2, f"{sum1:.2f}", f"{sum2:.2f}", status))
         
-        # Display Results
+        # Display Comparison Results
         st.markdown("### 📊 Comparison Results:")
         st.table(pd.DataFrame(results, columns=["Column", "Count in File1", "Count in File2", "Sum in File1", "Sum in File2", "Status"]))
         
-        # Highlight missing columns
-        if missing_columns:
-            st.markdown("### ⚠ Columns Not Present in Both Files:")
-            st.markdown(f"<div style='color: pink; font-weight: bold;'>{', '.join(missing_columns)}</div>", unsafe_allow_html=True)
+        # Identify missing columns
+        missing_in_file1 = list(set(df2.columns) - set(df1.columns))
+        missing_in_file2 = list(set(df1.columns) - set(df2.columns))
 
+        if missing_in_file1 or missing_in_file2:
+            st.markdown("### ⚠ Columns Not Present in Both Files:")
+
+            # Pad the shorter list with "-"
+            max_len = max(len(missing_in_file1), len(missing_in_file2))
+            missing_in_file1 += ["-"] * (max_len - len(missing_in_file1))
+            missing_in_file2 += ["-"] * (max_len - len(missing_in_file2))
+
+            # Create the DataFrame
+            missing_df = pd.DataFrame({
+                f"Missing in {file1.name}": missing_in_file1,
+                f"Missing in {file2.name}": missing_in_file2
+            })
+
+            st.table(missing_df)
